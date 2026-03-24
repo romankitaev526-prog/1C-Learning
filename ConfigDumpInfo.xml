@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<ConfigDumpInfo xmlns="http://v8.1c.ru/8.3/xcf/dumpinfo" xmlns:xen="http://v8.1c.ru/8.3/xcf/enums" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" format="Hierarchical" version="2.15">
+	<ConfigVersions>
+		<Metadata name="Catalog.ГрафикиРаботы" id="2bd3e744-ac3c-47f9-9f05-a5788ab4392c" configVersion="8857077f504e7f4096cce071cae92c2400000000"/>
+		<Metadata name="Catalog.Должности" id="4a4f3c12-c5ac-4497-af2a-fd9635c3a1de" configVersion="b98588eaed7929419e41eb6d5da996bd00000000"/>
+		<Metadata name="Catalog.Подразделения" id="f12b5592-5a3f-4c54-b10a-3cda64ad559f" configVersion="7bbf24272aae714dac028b9261a08bae00000000"/>
+		<Metadata name="Catalog.Сотрудники" id="e0baa76c-c612-4021-8c06-00ed2568c61a" configVersion="aaec05dc279e7f49a4acc180a44d7dde00000000"/>
+		<Metadata name="Configuration.Конфигурация" id="3a5cb9f9-aa7e-4abf-82ce-19dbf66ca7a4" configVersion="7db84a98e8442f4dba4fbaf2bb0c900e00000000"/>
+		<Metadata name="Enum.СостояниеСотрудников" id="2cd68f3a-d586-4b01-9a72-fabac556091b" configVersion="21ffc0d6e783934e98f1042a5f4f6d9f00000000">
+			<Metadata name="Enum.СостояниеСотрудников.EnumValue.Отпуск" id="7b2840bd-e054-4dbc-b851-873c66cfec26"/>
+			<Metadata name="Enum.СостояниеСотрудников.EnumValue.Болеет" id="d8c31b82-eafb-4d9d-b907-14ccb69a8112"/>
+			<Metadata name="Enum.СостояниеСотрудников.EnumValue.Работает" id="dbce4b01-4785-4e4f-adb9-f5e37819e491"/>
+			<Metadata name="Enum.СостояниеСотрудников.EnumValue.Командировка" id="f8975f2d-2476-4860-a982-1cd714f83ac2"/>
+		</Metadata>
+		<Metadata name="InformationRegister.ГрафикиРаботыСотрудников" id="37b0bded-3ab8-4964-9ff5-78e972b96dcf" configVersion="bdcc87a2ac5b51408b0e18af5d108e8e00000000">
+			<Metadata name="InformationRegister.ГрафикиРаботыСотрудников.Dimension.Сотрудник" id="11e9285f-b154-4223-903d-21d26acda762"/>
+			<Metadata name="InformationRegister.ГрафикиРаботыСотрудников.Resource.ГрафикРаботы" id="c20fe963-1134-4785-9846-d8c9400b989d"/>
+		</Metadata>
+		<Metadata name="InformationRegister.КадроваяИстория" id="1179e068-a10c-40e2-befb-d163d9835d05" configVersion="7847ca495808a3418ba1851e316c69a600000000">
+			<Metadata name="InformationRegister.КадроваяИстория.Resource.Должность" id="750837bc-2d24-4791-acda-8847518bbf70"/>
+			<Metadata name="InformationRegister.КадроваяИстория.Resource.Подразделение" id="875cdc3e-cd13-4f68-ada6-9323356644c5"/>
+			<Metadata name="InformationRegister.КадроваяИстория.Dimension.Сотрудник" id="89bde651-78e7-4eef-85f9-cb373dcab01d"/>
+		</Metadata>
+		<Metadata name="InformationRegister.СостоянияСотрудников" id="2da371f3-5927-426e-b397-b049ec97533c" configVersion="a786a30377198d4ea2baa188b3e01e7a00000000">
+			<Metadata name="InformationRegister.СостоянияСотрудников.Dimension.Сотрудник" id="0d379045-c300-4ffa-872e-312478cd872c"/>
+			<Metadata name="InformationRegister.СостоянияСотрудников.Resource.Состояние" id="5ab53dd6-cd3f-4a61-b8dc-4f6f1d469d6c"/>
+		</Metadata>
+		<Metadata name="Language.Русский" id="02fea64f-0643-4490-a40f-534358dd392a" configVersion="24b1d92d91854a488b9f0a34c401fba700000000"/>
+		<Metadata name="Report.КадроваяИсторияСотрудников" id="1d1daf44-13d2-46e7-90e3-18b652e9d09e" configVersion="71f7588d0bbab845b317d37e159b36b700000000"/>
+		<Metadata name="Report.КадроваяИсторияСотрудников.Template.ОсновнаяСхемаКомпоновкиДанных" id="35e9363a-2b7b-4474-9f6e-d7935527b6c1" configVersion="2c9aea7378a91f4cae1c27aa008ecee000000000"/>
+		<Metadata name="Report.КадроваяИсторияСотрудников.Template.ОсновнаяСхемаКомпоновкиДанных.Template" id="35e9363a-2b7b-4474-9f6e-d7935527b6c1.0" configVersion="f58f3820b9ca67458bae0721dcc7d84200000000"/>
+	</ConfigVersions>
+</ConfigDumpInfo>

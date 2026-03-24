@@ -1,0 +1,255 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<DataCompositionSchema xmlns="http://v8.1c.ru/8.1/data-composition-system/schema" xmlns:dcscom="http://v8.1c.ru/8.1/data-composition-system/common" xmlns:dcscor="http://v8.1c.ru/8.1/data-composition-system/core" xmlns:dcsset="http://v8.1c.ru/8.1/data-composition-system/settings" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<dataSource>
+		<name>ИсточникДанных1</name>
+		<dataSourceType>Local</dataSourceType>
+	</dataSource>
+	<dataSet xsi:type="DataSetQuery">
+		<name>НаборДанных1</name>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>Подразделение</dataPath>
+			<field>Подразделение</field>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>Сотрудник</dataPath>
+			<field>Сотрудник</field>
+			<role>
+				<dcscom:dimension>true</dcscom:dimension>
+			</role>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>ДатаНачала</dataPath>
+			<field>ДатаНачала</field>
+			<title xsi:type="v8:LocalStringType">
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Дата начала</v8:content>
+				</v8:item>
+			</title>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>ДатаОкончания</dataPath>
+			<field>ДатаОкончания</field>
+			<title xsi:type="v8:LocalStringType">
+				<v8:item>
+					<v8:lang>ru</v8:lang>
+					<v8:content>Дата окончания</v8:content>
+				</v8:item>
+			</title>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>Состояние</dataPath>
+			<field>Состояние</field>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>ГрафикРаботы</dataPath>
+			<field>ГрафикРаботы</field>
+		</field>
+		<field xsi:type="DataSetFieldField">
+			<dataPath>Должность</dataPath>
+			<field>Должность</field>
+		</field>
+		<dataSource>ИсточникДанных1</dataSource>
+		<query>// 1. Собираем все точки изменений
+ВЫБРАТЬ РАЗЛИЧНЫЕ
+	Т.Сотрудник КАК Сотрудник,
+	Т.Период КАК Период
+ПОМЕСТИТЬ ВТ_ВсеДаты
+ИЗ
+	(ВЫБРАТЬ Сотрудник, Период ИЗ РегистрСведений.КадроваяИстория
+	ОБЪЕДИНИТЬ
+	ВЫБРАТЬ Сотрудник, Период ИЗ РегистрСведений.СостоянияСотрудников
+	ОБЪЕДИНИТЬ
+	ВЫБРАТЬ Сотрудник, Период ИЗ РегистрСведений.ГрафикиРаботыСотрудников) КАК Т
+;
+
+////////////////////////////////////////////////////////////////////////////////
+// 2. Формируем периоды
+ВЫБРАТЬ
+	Т1.Сотрудник КАК Сотрудник,
+	Т1.Период КАК ДатаНачала,
+	ДОБАВИТЬКДАТЕ(МИНИМУМ(ЕСТЬNULL(Т2.Период, ДАТАВРЕМЯ(3999, 12, 31))), СЕКУНДА, -1) КАК ДатаОкончания
+ПОМЕСТИТЬ ВТ_Периоды
+ИЗ
+	ВТ_ВсеДаты КАК Т1
+		ЛЕВОЕ СОЕДИНЕНИЕ ВТ_ВсеДаты КАК Т2
+		ПО Т1.Сотрудник = Т2.Сотрудник
+			И Т1.Период &lt; Т2.Период
+СГРУППИРОВАТЬ ПО
+	Т1.Сотрудник,
+	Т1.Период
+;
+
+////////////////////////////////////////////////////////////////////////////////
+// 3. Находим актуальные даты записей в регистрах для каждого периода
+ВЫБРАТЬ
+	ВТ.Сотрудник КАК Сотрудник,
+	ВТ.ДатаНачала КАК ДатаНачала,
+	МАКСИМУМ(Кадры.Период) КАК ДатаКадров,
+	МАКСИМУМ(Графики.Период) КАК ДатаГрафиков,
+	МАКСИМУМ(Состояния.Период) КАК ДатаСостояний
+ПОМЕСТИТЬ ВТ_АктуальныеДаты
+ИЗ
+	ВТ_Периоды КАК ВТ
+		ЛЕВОЕ СОЕДИНЕНИЕ РегистрСведений.КадроваяИстория КАК Кадры
+		ПО ВТ.Сотрудник = Кадры.Сотрудник И Кадры.Период &lt;= ВТ.ДатаНачала
+		ЛЕВОЕ СОЕДИНЕНИЕ РегистрСведений.ГрафикиРаботыСотрудников КАК Графики
+		ПО ВТ.Сотрудник = Графики.Сотрудник И Графики.Период &lt;= ВТ.ДатаНачала
+		ЛЕВОЕ СОЕДИНЕНИЕ РегистрСведений.СостоянияСотрудников КАК Состояния
+		ПО ВТ.Сотрудник = Состояния.Сотрудник И Состояния.Период &lt;= ВТ.ДатаНачала
+СГРУППИРОВАТЬ ПО
+	ВТ.Сотрудник,
+	ВТ.ДатаНачала
+;
+
+////////////////////////////////////////////////////////////////////////////////
+// 4. Собираем финальные данные по найденным датам
+ВЫБРАТЬ
+	ВТ.Сотрудник КАК Сотрудник,
+	ВТ.ДатаНачала КАК ДатаНачала,
+	ВТ_П.ДатаОкончания КАК ДатаОкончания,
+	Кадры.Подразделение КАК Подразделение,
+	Кадры.Должность КАК Должность,
+	Графики.ГрафикРаботы КАК ГрафикРаботы,
+	Состояния.Состояние КАК Состояние
+ИЗ
+	ВТ_АктуальныеДаты КАК ВТ
+		ВНУТРЕННЕЕ СОЕДИНЕНИЕ ВТ_Периоды КАК ВТ_П
+		ПО ВТ.Сотрудник = ВТ_П.Сотрудник И ВТ.ДатаНачала = ВТ_П.ДатаНачала
+		ЛЕВОЕ СОЕДИНЕНИЕ РегистрСведений.КадроваяИстория КАК Кадры
+		ПО ВТ.Сотрудник = Кадры.Сотрудник И ВТ.ДатаКадров = Кадры.Период
+		ЛЕВОЕ СОЕДИНЕНИЕ РегистрСведений.ГрафикиРаботыСотрудников КАК Графики
+		ПО ВТ.Сотрудник = Графики.Сотрудник И ВТ.ДатаГрафиков = Графики.Период
+		ЛЕВОЕ СОЕДИНЕНИЕ РегистрСведений.СостоянияСотрудников КАК Состояния
+		ПО ВТ.Сотрудник = Состояния.Сотрудник И ВТ.ДатаСостояний = Состояния.Период
+{ГДЕ
+	(ВТ.ДатаНачала МЕЖДУ &amp;НачалоПериода И &amp;КонецПериода)}
+</query>
+	</dataSet>
+	<parameter>
+		<name>НачалоПериода</name>
+		<title xsi:type="v8:LocalStringType">
+			<v8:item>
+				<v8:lang>ru</v8:lang>
+				<v8:content>Начало периода</v8:content>
+			</v8:item>
+		</title>
+		<valueType>
+			<v8:Type>xs:dateTime</v8:Type>
+			<v8:DateQualifiers>
+				<v8:DateFractions>DateTime</v8:DateFractions>
+			</v8:DateQualifiers>
+		</valueType>
+		<value xsi:type="xs:dateTime">0001-01-01T00:00:00</value>
+		<useRestriction>false</useRestriction>
+		<availableAsField>false</availableAsField>
+	</parameter>
+	<parameter>
+		<name>КонецПериода</name>
+		<title xsi:type="v8:LocalStringType">
+			<v8:item>
+				<v8:lang>ru</v8:lang>
+				<v8:content>Конец периода</v8:content>
+			</v8:item>
+		</title>
+		<valueType>
+			<v8:Type>xs:dateTime</v8:Type>
+			<v8:DateQualifiers>
+				<v8:DateFractions>DateTime</v8:DateFractions>
+			</v8:DateQualifiers>
+		</valueType>
+		<value xsi:type="xs:dateTime">0001-01-01T00:00:00</value>
+		<useRestriction>false</useRestriction>
+		<availableAsField>false</availableAsField>
+	</parameter>
+	<settingsVariant>
+		<dcsset:name>Основной</dcsset:name>
+		<dcsset:presentation xsi:type="xs:string">Основной</dcsset:presentation>
+		<dcsset:settings xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows">
+			<dcsset:selection>
+				<dcsset:item xsi:type="dcsset:SelectedItemField">
+					<dcsset:field>Сотрудник</dcsset:field>
+				</dcsset:item>
+				<dcsset:item xsi:type="dcsset:SelectedItemField">
+					<dcsset:field>ГрафикРаботы</dcsset:field>
+				</dcsset:item>
+				<dcsset:item xsi:type="dcsset:SelectedItemField">
+					<dcsset:field>ДатаНачала</dcsset:field>
+				</dcsset:item>
+				<dcsset:item xsi:type="dcsset:SelectedItemField">
+					<dcsset:field>ДатаОкончания</dcsset:field>
+				</dcsset:item>
+				<dcsset:item xsi:type="dcsset:SelectedItemField">
+					<dcsset:field>Должность</dcsset:field>
+				</dcsset:item>
+				<dcsset:item xsi:type="dcsset:SelectedItemField">
+					<dcsset:field>Подразделение</dcsset:field>
+				</dcsset:item>
+				<dcsset:item xsi:type="dcsset:SelectedItemField">
+					<dcsset:field>Состояние</dcsset:field>
+				</dcsset:item>
+			</dcsset:selection>
+			<dcsset:filter>
+				<dcsset:item xsi:type="dcsset:FilterItemComparison">
+					<dcsset:left xsi:type="dcscor:Field">Сотрудник</dcsset:left>
+					<dcsset:comparisonType>Equal</dcsset:comparisonType>
+					<dcsset:userSettingID>244f6937-d0a3-489e-aea8-05c5b27146a9</dcsset:userSettingID>
+				</dcsset:item>
+				<dcsset:item xsi:type="dcsset:FilterItemComparison">
+					<dcsset:left xsi:type="dcscor:Field">Подразделение</dcsset:left>
+					<dcsset:comparisonType>Equal</dcsset:comparisonType>
+					<dcsset:userSettingID>55eb4b97-1e69-47a0-b676-21a1a6ac5966</dcsset:userSettingID>
+				</dcsset:item>
+			</dcsset:filter>
+			<dcsset:dataParameters>
+				<dcscor:item xsi:type="dcsset:SettingsParameterValue">
+					<dcscor:use>false</dcscor:use>
+					<dcscor:parameter>НачалоПериода</dcscor:parameter>
+					<dcscor:value xsi:type="xs:dateTime">0001-01-01T00:00:00</dcscor:value>
+					<dcsset:userSettingID>399f3fef-ede8-44fa-aebe-5d2b4139984e</dcsset:userSettingID>
+				</dcscor:item>
+				<dcscor:item xsi:type="dcsset:SettingsParameterValue">
+					<dcscor:use>false</dcscor:use>
+					<dcscor:parameter>КонецПериода</dcscor:parameter>
+					<dcscor:value xsi:type="xs:dateTime">0001-01-01T00:00:00</dcscor:value>
+					<dcsset:userSettingID>7dee0856-5335-45c6-bc6a-179800426f09</dcsset:userSettingID>
+				</dcscor:item>
+			</dcsset:dataParameters>
+			<dcsset:order>
+				<dcsset:item xsi:type="dcsset:OrderItemField">
+					<dcsset:field>Сотрудник</dcsset:field>
+					<dcsset:orderType>Asc</dcsset:orderType>
+				</dcsset:item>
+				<dcsset:item xsi:type="dcsset:OrderItemField">
+					<dcsset:field>ДатаНачала</dcsset:field>
+					<dcsset:orderType>Asc</dcsset:orderType>
+				</dcsset:item>
+			</dcsset:order>
+			<dcsset:item xsi:type="dcsset:StructureItemGroup">
+				<dcsset:groupItems>
+					<dcsset:item xsi:type="dcsset:GroupItemField">
+						<dcsset:field>Сотрудник</dcsset:field>
+						<dcsset:groupType>Items</dcsset:groupType>
+						<dcsset:periodAdditionType>None</dcsset:periodAdditionType>
+						<dcsset:periodAdditionBegin xsi:type="xs:dateTime">0001-01-01T00:00:00</dcsset:periodAdditionBegin>
+						<dcsset:periodAdditionEnd xsi:type="xs:dateTime">0001-01-01T00:00:00</dcsset:periodAdditionEnd>
+					</dcsset:item>
+				</dcsset:groupItems>
+				<dcsset:order>
+					<dcsset:item xsi:type="dcsset:OrderItemAuto"/>
+				</dcsset:order>
+				<dcsset:selection>
+					<dcsset:item xsi:type="dcsset:SelectedItemAuto"/>
+				</dcsset:selection>
+				<dcsset:item xsi:type="dcsset:StructureItemGroup">
+					<dcsset:order>
+						<dcsset:item xsi:type="dcsset:OrderItemAuto"/>
+					</dcsset:order>
+					<dcsset:selection>
+						<dcsset:item xsi:type="dcsset:SelectedItemAuto"/>
+					</dcsset:selection>
+				</dcsset:item>
+			</dcsset:item>
+		</dcsset:settings>
+	</settingsVariant>
+</DataCompositionSchema>
